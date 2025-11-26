@@ -1,0 +1,5 @@
+{
+  "name": "二兵楊維中的軍旅生涯",
+  "description": "一款模擬軍旅生涯的交互蹲跳遊戲，包含五個經典場景，並附帶基於 Gemini 的軍旅照片編輯功能。",
+  "requestFramePermissions": []
+}
