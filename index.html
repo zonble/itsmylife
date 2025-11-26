@@ -66,6 +66,22 @@
       .animate-flicker {
         animation: flicker 4s infinite;
       }
+
+      @keyframes fly-sweat-left {
+        0% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+        100% { transform: translate(-40px, 10px) scale(0); opacity: 0; }
+      }
+      .animate-fly-sweat-left {
+        animation: fly-sweat-left 0.5s ease-out forwards;
+      }
+
+      @keyframes fly-sweat-right {
+        0% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+        100% { transform: translate(40px, 10px) scale(0); opacity: 0; }
+      }
+      .animate-fly-sweat-right {
+        animation: fly-sweat-right 0.5s ease-out forwards;
+      }
     </style>
   <script type="importmap">
 {

@@ -40,6 +40,19 @@ export const Soldier: React.FC<SoldierProps> = ({ isJumping, totalJumps = 0, lev
               </pattern>
             </defs>
 
+            {/* --- Flying Sweat (Only when Jumping) --- */}
+            {isJumping && (
+               <g transform="translate(100, 50)">
+                   {/* Left side splash */}
+                   <circle cx="-30" cy="10" r="3" fill="#aaddff" className="animate-fly-sweat-left" />
+                   <circle cx="-35" cy="20" r="2" fill="#aaddff" className="animate-fly-sweat-left" style={{animationDelay: '0.1s'}} />
+                   
+                   {/* Right side splash */}
+                   <circle cx="30" cy="10" r="3" fill="#aaddff" className="animate-fly-sweat-right" />
+                   <circle cx="35" cy="20" r="2" fill="#aaddff" className="animate-fly-sweat-right" style={{animationDelay: '0.1s'}} />
+               </g>
+            )}
+
             {/* --- RIFLE (BEHIND BODY) --- */}
             {showFullGear && (
                 <g transform={isJumping ? "translate(0,0)" : "translate(0, 15)"} className="transition-transform duration-100">
@@ -197,7 +210,7 @@ export const Soldier: React.FC<SoldierProps> = ({ isJumping, totalJumps = 0, lev
                      </g>
                    )}
 
-                    {/* Sweat drops (Standard) */}
+                    {/* Sweat drops (Static when resting) */}
                     {!isJumping && !showHelmet && (
                        <>
                          <circle cx="-15" cy="-10" r="1.5" fill="#aaddff" className="animate-ping" style={{animationDuration: '1.5s'}} />
@@ -215,7 +228,7 @@ export const Soldier: React.FC<SoldierProps> = ({ isJumping, totalJumps = 0, lev
                            {/* Chin Strap */}
                            <path d="M-24 5 Q 0 55 24 5" stroke="#222" strokeWidth="2" fill="none" />
                            
-                           {/* Sweat drops pouring from under helmet */}
+                           {/* Sweat drops pouring from under helmet when resting */}
                            {!isJumping && (
                                <>
                                  <circle cx="-25" cy="5" r="2" fill="#aaddff" className="animate-ping" style={{animationDuration: '1s'}} />

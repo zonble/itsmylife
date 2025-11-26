@@ -5,7 +5,7 @@ import { Soldier } from './components/Soldier';
 import { PhotoEditor } from './components/PhotoEditor';
 import { InteractiveProp } from './components/InteractiveProp';
 import { Image as ImageIcon, Dumbbell, Volume2, VolumeX, Medal, Lock, Skull, Pickaxe, Gavel } from 'lucide-react';
-import { initAudio, playJumpSound } from './utils/audio';
+import { initAudio, playJumpSound, playPantSound } from './utils/audio';
 
 // Reliable public domain military march (John Philip Sousa)
 const BGM_URL = "https://upload.wikimedia.org/wikipedia/commons/3/35/Sousa_-_The_Stars_and_Stripes_Forever.ogg";
@@ -94,6 +94,21 @@ export default function App() {
 
     return () => clearTimeout(timer);
   }, [totalJumps, gameStarted, currentTab, isConfinement, isEnding]);
+
+  // Panting Sound Logic: Trigger when animation ends
+  useEffect(() => {
+    if (!isAnimating && totalJumps > 0 && !isConfinement && !isEnding && !isMuted && gameStarted) {
+        // Only play pant sound if we haven't just finished the level (to avoid overlap with victory/transition)
+        // Note: jumpsInLevel is already incremented by handleJump, so if it equals requiredJumps, we are done.
+        if (jumpsInLevel < currentLevel.requiredJumps) {
+            // 70% chance to play groan to avoid being too repetitive
+            if (Math.random() > 0.3) {
+                playPantSound();
+            }
+        }
+    }
+  }, [isAnimating, isConfinement, isEnding, isMuted, gameStarted, jumpsInLevel, currentLevel.requiredJumps, totalJumps]);
+
 
   const handleRepent = () => {
     if (isEnding) {

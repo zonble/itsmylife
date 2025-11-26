@@ -62,6 +62,68 @@ export const playJumpSound = () => {
   osc.stop(t + 0.2);
 };
 
+export const playPantSound = () => {
+  const ctx = initAudio();
+  const t = ctx.currentTime;
+  
+  // Only play if audio context is running
+  if (ctx.state !== 'running') return;
+
+  // 1. Breathy Exhale (Pink Noise-ish)
+  const bufferSize = ctx.sampleRate * 0.4;
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    const white = Math.random() * 2 - 1;
+    data[i] = (lastOut + (0.02 * white)) / 1.02; // Simple pinking filter
+    lastOut = data[i];
+    data[i] *= 3.5; // Compensate for gain loss
+  }
+  
+  const noise = ctx.createBufferSource();
+  noise.buffer = buffer;
+  
+  const noiseFilter = ctx.createBiquadFilter();
+  noiseFilter.type = 'bandpass';
+  noiseFilter.frequency.value = 800;
+  noiseFilter.Q.value = 1;
+
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(0.05, t); // Low volume
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(ctx.destination);
+  noise.start();
+
+  // 2. Groan (Low Sawtooth)
+  const osc = ctx.createOscillator();
+  const oscGain = ctx.createGain();
+
+  osc.type = 'sawtooth';
+  // Pitch drops slightly (tiredness)
+  osc.frequency.setValueAtTime(150, t); 
+  osc.frequency.linearRampToValueAtTime(100, t + 0.3);
+
+  oscGain.gain.setValueAtTime(0.08, t);
+  oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+  
+  // Lowpass to muffle the harsh saw wave
+  const oscFilter = ctx.createBiquadFilter();
+  oscFilter.type = 'lowpass';
+  oscFilter.frequency.value = 300;
+
+  osc.connect(oscFilter);
+  oscFilter.connect(oscGain);
+  oscGain.connect(ctx.destination);
+
+  osc.start();
+  osc.stop(t + 0.4);
+};
+// Helper for pink noise state
+let lastOut = 0;
+
 export const playPropSound = (type: 'BIRD' | 'BUG' | 'PAPER' | 'ROACH') => {
   const ctx = initAudio();
   const t = ctx.currentTime;
