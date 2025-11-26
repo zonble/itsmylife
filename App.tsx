@@ -4,7 +4,7 @@ import { LEVELS, MAX_LEVEL } from './constants';
 import { Soldier } from './components/Soldier';
 import { PhotoEditor } from './components/PhotoEditor';
 import { InteractiveProp } from './components/InteractiveProp';
-import { Image as ImageIcon, Dumbbell, Volume2, VolumeX, Medal, Lock, Skull } from 'lucide-react';
+import { Image as ImageIcon, Dumbbell, Volume2, VolumeX, Medal, Lock, Skull, Pickaxe, Gavel } from 'lucide-react';
 import { initAudio, playJumpSound } from './utils/audio';
 
 // Reliable public domain military march (John Philip Sousa)
@@ -45,6 +45,7 @@ export default function App() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isConfinement, setIsConfinement] = useState(false);
   const [isEnding, setIsEnding] = useState(false); // New state for special ending
+  const [punishmentCount, setPunishmentCount] = useState(0); // Track failures
   
   // Visual Effects State
   const [ripples, setRipples] = useState<{id: number, x: number, y: number}[]>([]);
@@ -84,25 +85,34 @@ export default function App() {
   // Confinement Logic: 5 Second Timeout
   useEffect(() => {
     // Only run timer if game is active, not in editor, not already confined
-    if (!gameStarted || currentTab !== 'GAME' || isConfinement) return;
+    if (!gameStarted || currentTab !== 'GAME' || isConfinement || isEnding) return;
 
     const timer = setTimeout(() => {
       setIsConfinement(true);
+      setPunishmentCount(prev => prev + 1);
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [totalJumps, gameStarted, currentTab, isConfinement]);
+  }, [totalJumps, gameStarted, currentTab, isConfinement, isEnding]);
 
   const handleRepent = () => {
     if (isEnding) {
-        // Hard reset game
+        // Hard reset game from True Ending
         setIsEnding(false);
         setIsConfinement(false);
         setCurrentLevelIndex(0);
         setJumpsInLevel(0);
         setTotalJumps(0);
+        setPunishmentCount(0);
+    } else if (punishmentCount >= 4) {
+        // Hard reset game from Court Martial (Game Over)
+        setIsConfinement(false);
+        setCurrentLevelIndex(0);
+        setJumpsInLevel(0);
+        setTotalJumps(0);
+        setPunishmentCount(0);
     } else {
-        // Soft reset level
+        // Soft reset level for Confinement/Mingde
         setIsConfinement(false);
         setJumpsInLevel(0);
     }
@@ -229,61 +239,117 @@ export default function App() {
     </div>
   );
 
-  const renderConfinement = () => (
-    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black animate-in fade-in duration-1000 overflow-hidden">
-        {/* Gritty Texture Overlay */}
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-felt.png')] opacity-30 pointer-events-none"></div>
-        
-        {/* Bars Gradient */}
-        <div 
-          className="absolute inset-0 pointer-events-none opacity-80 z-20"
-          style={{
-            backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 15%, #000 15%, #050505 18%, #1a1a1a 19%, #000 21%)',
-            backgroundSize: '100% 100%'
-          }}
-        />
+  const renderConfinement = () => {
+    // Determine content based on Punishment Stage
+    let title = "禁閉室";
+    let description = "動作太慢！懷疑啊？\n超過五秒沒動作，\n直接關進來反省！";
+    let btnText = "寫悔過書 (RETRY)";
+    let Icon = Lock;
+    let themeColor = "red"; // Tailwind color name base
+    let borderColor = "border-red-800";
+    let iconBg = "bg-red-950 ring-red-900";
+    let iconColor = "text-red-500";
+    let btnClass = "bg-red-900/20 border-red-800 text-red-500 hover:bg-red-900/40";
+    
+    // Special Ending (Game Clear but Confinement)
+    if (isEnding) {
+        title = "永無止盡";
+        description = "以為跳完就結束了？\n太天真了。\n軍旅生涯是沒有盡頭的輪迴。";
+        btnText = "重新輪迴 (RESTART)";
+        Icon = Skull;
+        themeColor = "stone";
+        borderColor = "border-stone-700";
+        iconBg = "bg-stone-800 ring-stone-700";
+        iconColor = "text-stone-500";
+        btnClass = "bg-stone-900 border-stone-700 text-stone-500 hover:text-stone-300";
+    } 
+    // Progressive Punishments
+    else if (punishmentCount >= 4) {
+        title = "軍法審判";
+        description = "抗命！敵前逃亡！\n嚴重違反軍紀！\n唯一死刑！";
+        btnText = "接受判決 (GAME OVER)";
+        Icon = Gavel;
+        themeColor = "zinc";
+        borderColor = "border-zinc-500";
+        iconBg = "bg-black ring-zinc-500";
+        iconColor = "text-zinc-200";
+        btnClass = "bg-black border-zinc-500 text-zinc-200 hover:bg-zinc-900";
+    } else if (punishmentCount === 3) {
+        title = "明德班";
+        description = "屢教不改！\n送去明德班進行感化教育！\n準備好磨掉一層皮了嗎？";
+        btnText = "體能訓練 (RETRY)";
+        Icon = Pickaxe;
+        themeColor = "blue";
+        borderColor = "border-blue-800";
+        iconBg = "bg-slate-900 ring-blue-900";
+        iconColor = "text-blue-500";
+        btnClass = "bg-slate-900/50 border-blue-800 text-blue-400 hover:bg-slate-800";
+    }
 
-        {/* Flickering Light Effect */}
-        <div className="absolute inset-0 bg-yellow-900/10 animate-flicker pointer-events-none z-10"></div>
-        
-        <div className="z-30 flex flex-col items-center max-w-sm w-full p-6 space-y-8">
-            <div className={`w-24 h-24 rounded-full flex items-center justify-center ring-4 ring-offset-4 ring-offset-black ${isEnding ? 'bg-stone-800 ring-stone-700' : 'bg-red-950 ring-red-900'} shadow-2xl`}>
-               {isEnding ? <Skull className="w-12 h-12 text-stone-500" /> : <Lock className="w-12 h-12 text-red-500" />}
-            </div>
-            
-            <div className="text-center space-y-4">
-              <h2 className={`text-5xl font-black tracking-widest ${isEnding ? 'text-stone-400' : 'text-red-600'} drop-shadow-[0_4px_4px_rgba(0,0,0,1)]`}>
-                  {isEnding ? '永無止盡' : '禁閉室'}
-              </h2>
+    return (
+      <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black animate-in fade-in duration-1000 overflow-hidden">
+          {/* Gritty Texture Overlay */}
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-felt.png')] opacity-30 pointer-events-none"></div>
+          
+          {/* Bars Gradient */}
+          <div 
+            className="absolute inset-0 pointer-events-none opacity-80 z-20"
+            style={{
+              backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 15%, #000 15%, #050505 18%, #1a1a1a 19%, #000 21%)',
+              backgroundSize: '100% 100%'
+            }}
+          />
+
+          {/* Flickering Light Effect */}
+          <div className="absolute inset-0 bg-yellow-900/10 animate-flicker pointer-events-none z-10"></div>
+          
+          <div className="z-30 flex flex-col items-center max-w-sm w-full p-6 space-y-8">
+              <div className={`w-24 h-24 rounded-full flex items-center justify-center ring-4 ring-offset-4 ring-offset-black ${iconBg} shadow-2xl`}>
+                 <Icon className={`w-12 h-12 ${iconColor}`} />
+              </div>
               
-              <div className="bg-black/60 p-4 border border-stone-800 rounded">
-                  <p className="text-stone-400 font-mono text-lg">
-                    {isEnding 
-                        ? "以為跳完就結束了？\n太天真了。\n軍旅生涯是沒有盡頭的輪迴。" 
-                        : "動作太慢！懷疑啊？\n超過五秒沒動作，\n直接關進來反省！"}
-                  </p>
+              <div className="text-center space-y-4">
+                <h2 className={`text-5xl font-black tracking-widest ${iconColor} drop-shadow-[0_4px_4px_rgba(0,0,0,1)]`}>
+                    {title}
+                </h2>
+                
+                <div className={`bg-black/80 p-4 border ${borderColor} rounded shadow-2xl backdrop-blur-sm`}>
+                    <p className="text-stone-300 font-mono text-lg whitespace-pre-line leading-relaxed">
+                      {description}
+                    </p>
+                </div>
+
+                {/* Status Indicator */}
+                {!isEnding && (
+                   <div className="flex justify-center gap-2 mt-2">
+                       {/* 1st Strike */}
+                       <div className={`w-3 h-3 rounded-full ${punishmentCount >= 1 ? 'bg-red-600 animate-pulse' : 'bg-stone-800'}`} />
+                       {/* 2nd Strike */}
+                       <div className={`w-3 h-3 rounded-full ${punishmentCount >= 2 ? 'bg-red-600 animate-pulse' : 'bg-stone-800'}`} />
+                       {/* 3rd Strike (Mingde) */}
+                       <div className={`w-3 h-3 rounded-full ${punishmentCount >= 3 ? 'bg-blue-500 animate-pulse' : 'bg-stone-800'}`} />
+                       {/* 4th Strike (Court Martial) */}
+                       <div className={`w-3 h-3 rounded-full ${punishmentCount >= 4 ? 'bg-white animate-pulse' : 'bg-stone-800'}`} />
+                   </div>
+                )}
+                
+                {isEnding && (
+                   <div className="text-stone-600 font-mono text-xs tracking-[0.5em] mt-4 opacity-50">
+                      DAY {Math.floor(Math.random() * 1000)} OF CONFINEMENT
+                   </div>
+                )}
               </div>
 
-              {isEnding && (
-                 <div className="text-stone-600 font-mono text-xs tracking-[0.5em] mt-4 opacity-50">
-                    DAY {Math.floor(Math.random() * 1000)} OF CONFINEMENT
-                 </div>
-              )}
-            </div>
-
-            <button 
-              onClick={handleRepent}
-              className={`w-full py-4 px-8 border-2 font-black text-xl tracking-widest uppercase transition-all transform active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.8)]
-                 ${isEnding 
-                    ? 'bg-stone-900 border-stone-700 text-stone-500 hover:text-stone-300 hover:border-stone-500' 
-                    : 'bg-red-900/20 border-red-800 text-red-500 hover:bg-red-900/40 hover:text-red-400'
-                 }`}
-            >
-              {isEnding ? "重新輪迴 (RESTART)" : "寫悔過書 (RETRY)"}
-            </button>
-        </div>
-    </div>
-  );
+              <button 
+                onClick={handleRepent}
+                className={`w-full py-4 px-8 border-2 font-black text-xl tracking-widest uppercase transition-all transform active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.8)] ${btnClass}`}
+              >
+                {btnText}
+              </button>
+          </div>
+      </div>
+    );
+  };
 
   const renderGame = () => (
     <div 
