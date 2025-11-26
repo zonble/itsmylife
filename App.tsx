@@ -448,7 +448,7 @@ export default function App() {
            </div>
         )}
 
-        <Soldier isJumping={isAnimating} totalJumps={totalJumps} />
+        <Soldier isJumping={isAnimating} totalJumps={totalJumps} levelId={currentLevel.id} />
         
         <div className="mt-4 text-7xl font-black text-white/20 select-none pointer-events-none font-mono drop-shadow-lg">
            {totalJumps}

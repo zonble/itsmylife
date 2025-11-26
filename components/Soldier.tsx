@@ -4,11 +4,19 @@ import React from 'react';
 interface SoldierProps {
   isJumping: boolean;
   totalJumps?: number;
+  levelId: number;
 }
 
-export const Soldier: React.FC<SoldierProps> = ({ isJumping, totalJumps = 0 }) => {
+export const Soldier: React.FC<SoldierProps> = ({ isJumping, totalJumps = 0, levelId }) => {
   // Determine which leg is forward based on jump count.
   const isLeftLegForward = totalJumps % 2 === 0;
+
+  // Equipment Logic
+  const showHelmet = levelId >= 3;
+  const showFullGear = levelId >= 4;
+
+  const torsoFill = showFullGear ? "url(#camoPattern)" : "url(#shirtGrad)";
+  const sleeveFill = showFullGear ? "url(#camoPattern)" : "url(#shirtGrad)";
 
   return (
     <div className={`relative w-72 h-80 mx-auto transition-transform will-change-transform ${isJumping ? 'animate-jump' : ''}`}>
@@ -31,6 +39,18 @@ export const Soldier: React.FC<SoldierProps> = ({ isJumping, totalJumps = 0 }) =
                 <circle cx="15" cy="15" r="3" fill="#3a401a" />
               </pattern>
             </defs>
+
+            {/* --- RIFLE (BEHIND BODY) --- */}
+            {showFullGear && (
+                <g transform={isJumping ? "translate(0,0)" : "translate(0, 15)"} className="transition-transform duration-100">
+                    {/* Barrel sticking up behind Left Shoulder */}
+                    <rect x="50" y="20" width="6" height="60" fill="#111" transform="rotate(-15 50 20)" />
+                    <rect x="47" y="15" width="12" height="4" fill="#111" transform="rotate(-15 50 20)" /> {/* Flash hider */}
+                    
+                    {/* Stock sticking out near Right Hip */}
+                    <path d="M130 130 L 160 140 L 160 160 L 130 150 Z" fill="#1a1a1a" />
+                </g>
+            )}
 
             {/* --- LEGS & LOWER BODY --- */}
             <g transform="translate(0, 0)">
@@ -78,25 +98,51 @@ export const Soldier: React.FC<SoldierProps> = ({ isJumping, totalJumps = 0 }) =
             {/* --- TORSO --- */}
             {/* Raised waist to translate(0, 15) for higher posture */}
             <g transform={isJumping ? "translate(0,0)" : "translate(0, 15)"} className="transition-transform duration-100">
-                <path d="M70 70 L 130 70 L 125 150 L 75 150 Z" fill="url(#shirtGrad)" /> 
+                <path d="M70 70 L 130 70 L 125 150 L 75 150 Z" fill={torsoFill} /> 
                 
-                {/* Sweat stains on armpits */}
-                <ellipse cx="78" cy="85" rx="8" ry="12" fill="#304a0b" opacity="0.6" />
-                <ellipse cx="122" cy="85" rx="8" ry="12" fill="#304a0b" opacity="0.6" />
+                {/* Sweat stains on armpits (Only visible on T-shirt) */}
+                {!showFullGear && (
+                    <>
+                        <ellipse cx="78" cy="85" rx="8" ry="12" fill="#304a0b" opacity="0.6" />
+                        <ellipse cx="122" cy="85" rx="8" ry="12" fill="#304a0b" opacity="0.6" />
+                    </>
+                )}
+
+                {/* Rifle Strap (Across Chest) */}
+                {showFullGear && (
+                    <line x1="75" y1="70" x2="125" y2="150" stroke="#111" strokeWidth="4" opacity="0.9" />
+                )}
 
                 {/* Belt */}
-                <rect x="75" y="145" width="50" height="10" fill="#111" rx="2" />
-                <rect x="95" y="145" width="10" height="10" fill="#888" rx="1" />
+                {showFullGear ? (
+                    // S-Belt (Grey with grommets)
+                    <g>
+                        <rect x="73" y="145" width="54" height="12" fill="#555" rx="2" />
+                        {/* Grommets */}
+                        <circle cx="80" cy="151" r="1.5" fill="#222" />
+                        <circle cx="90" cy="151" r="1.5" fill="#222" />
+                        <circle cx="110" cy="151" r="1.5" fill="#222" />
+                        <circle cx="120" cy="151" r="1.5" fill="#222" />
+                        {/* Buckle */}
+                        <rect x="95" y="145" width="10" height="12" fill="#888" rx="1" stroke="#333" strokeWidth="0.5"/>
+                    </g>
+                ) : (
+                    // Standard Belt
+                    <g>
+                        <rect x="75" y="145" width="50" height="10" fill="#111" rx="2" />
+                        <rect x="95" y="145" width="10" height="10" fill="#888" rx="1" />
+                    </g>
+                )}
 
 
                 {/* --- ARMS --- */}
                 {/* Right Arm - Elbows pointing out */}
                 <path d="M125 75 L 165 60 L 120 40" stroke="url(#skinGrad)" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                <path d="M125 75 L 150 66" stroke="url(#shirtGrad)" strokeWidth="17" strokeLinecap="round" />
+                <path d="M125 75 L 150 66" stroke={sleeveFill} strokeWidth="17" strokeLinecap="round" />
 
                 {/* Left Arm */}
                 <path d="M75 75 L 35 60 L 80 40" stroke="url(#skinGrad)" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                <path d="M75 75 L 50 66" stroke="url(#shirtGrad)" strokeWidth="17" strokeLinecap="round" />
+                <path d="M75 75 L 50 66" stroke={sleeveFill} strokeWidth="17" strokeLinecap="round" />
 
 
                 {/* --- HEAD --- */}
@@ -107,20 +153,12 @@ export const Soldier: React.FC<SoldierProps> = ({ isJumping, totalJumps = 0 }) =
                    {/* Face Shape */}
                    <ellipse cx="0" cy="0" rx="23" ry="26" fill="url(#skinGrad)" />
                    
-                   {/* Sweat drops */}
-                   {!isJumping && (
-                       <>
-                         <circle cx="-15" cy="-10" r="1.5" fill="#aaddff" className="animate-ping" style={{animationDuration: '1.5s'}} />
-                         <circle cx="18" cy="-5" r="2" fill="#aaddff" className="animate-ping" style={{animationDuration: '2s'}} />
-                       </>
-                   )}
-
                    {/* Ears */}
                    <circle cx="-23" cy="0" r="5" fill="url(#skinGrad)" />
                    <circle cx="23" cy="0" r="5" fill="url(#skinGrad)" />
 
-                   {/* Hair (Buzz cut) */}
-                   <path d="M-21 -10 Q 0 -36 21 -10 L 23 -5 Q 0 -29 -23 -5 Z" fill="#1a1a1a" />
+                   {/* Hair (Buzz cut) - Only visible if no helmet */}
+                   {!showHelmet && <path d="M-21 -10 Q 0 -36 21 -10 L 23 -5 Q 0 -29 -23 -5 Z" fill="#1a1a1a" />}
 
                    {/* Glasses */}
                    <g stroke="#111" strokeWidth="1.5" fill="none">
@@ -158,6 +196,35 @@ export const Soldier: React.FC<SoldierProps> = ({ isJumping, totalJumps = 0 }) =
                         <line x1="2" y1="12" x2="2" y2="18" stroke="#333" strokeWidth="0.5" />
                      </g>
                    )}
+
+                    {/* Sweat drops (Standard) */}
+                    {!isJumping && !showHelmet && (
+                       <>
+                         <circle cx="-15" cy="-10" r="1.5" fill="#aaddff" className="animate-ping" style={{animationDuration: '1.5s'}} />
+                         <circle cx="18" cy="-5" r="2" fill="#aaddff" className="animate-ping" style={{animationDuration: '2s'}} />
+                       </>
+                   )}
+
+                   {/* HELMET (Levels 3+) */}
+                   {showHelmet && (
+                       <g transform="translate(0, -5)">
+                           {/* Helmet Shell */}
+                           <path d="M-26 0 Q 0 -40 26 0 L 26 5 Q 0 8 -26 5 Z" fill="#3b4d21" stroke="#1a260e" strokeWidth="1"/>
+                           {/* Texture/Shine */}
+                           <path d="M-15 -20 Q 0 -30 15 -20" stroke="rgba(255,255,255,0.2)" strokeWidth="2" fill="none" />
+                           {/* Chin Strap */}
+                           <path d="M-24 5 Q 0 55 24 5" stroke="#222" strokeWidth="2" fill="none" />
+                           
+                           {/* Sweat drops pouring from under helmet */}
+                           {!isJumping && (
+                               <>
+                                 <circle cx="-25" cy="5" r="2" fill="#aaddff" className="animate-ping" style={{animationDuration: '1s'}} />
+                                 <circle cx="25" cy="8" r="2" fill="#aaddff" className="animate-ping" style={{animationDuration: '1.2s'}} />
+                               </>
+                           )}
+                       </g>
+                   )}
+
                 </g>
             </g>
 
