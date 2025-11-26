@@ -4,11 +4,32 @@ import { LEVELS, MAX_LEVEL } from './constants';
 import { Soldier } from './components/Soldier';
 import { PhotoEditor } from './components/PhotoEditor';
 import { InteractiveProp } from './components/InteractiveProp';
-import { Image as ImageIcon, Dumbbell, Volume2, VolumeX, Medal, Lock } from 'lucide-react';
+import { Image as ImageIcon, Dumbbell, Volume2, VolumeX, Medal, Lock, Skull } from 'lucide-react';
 import { initAudio, playJumpSound } from './utils/audio';
 
 // Reliable public domain military march (John Philip Sousa)
 const BGM_URL = "https://upload.wikimedia.org/wikipedia/commons/3/35/Sousa_-_The_Stars_and_Stripes_Forever.ogg";
+
+const INSULTS = [
+  "跳高點！",
+  "沒吃飯啊？",
+  "爛兵！",
+  "懷疑啊？",
+  "再偷懶試試看！",
+  "腳抬高！",
+  "標齊對正！",
+  "太慢了！",
+  "軟腳蝦！",
+  "想放假？作夢！"
+];
+
+interface InsultBubble {
+  id: number;
+  text: string;
+  x: number; // Percentage
+  y: number; // Percentage
+  rot: number; // Rotation deg
+}
 
 export default function App() {
   // Global State
@@ -23,10 +44,12 @@ export default function App() {
   const [totalJumps, setTotalJumps] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isConfinement, setIsConfinement] = useState(false);
+  const [isEnding, setIsEnding] = useState(false); // New state for special ending
   
   // Visual Effects State
   const [ripples, setRipples] = useState<{id: number, x: number, y: number}[]>([]);
   const [shake, setShake] = useState(false);
+  const [insults, setInsults] = useState<InsultBubble[]>([]);
   
   // Audio State
   const [isMuted, setIsMuted] = useState(false);
@@ -71,8 +94,18 @@ export default function App() {
   }, [totalJumps, gameStarted, currentTab, isConfinement]);
 
   const handleRepent = () => {
-    setIsConfinement(false);
-    setJumpsInLevel(0);
+    if (isEnding) {
+        // Hard reset game
+        setIsEnding(false);
+        setIsConfinement(false);
+        setCurrentLevelIndex(0);
+        setJumpsInLevel(0);
+        setTotalJumps(0);
+    } else {
+        // Soft reset level
+        setIsConfinement(false);
+        setJumpsInLevel(0);
+    }
     
     // Resume Audio if needed
     if (audioRef.current && !isMuted) {
@@ -106,6 +139,20 @@ export default function App() {
     setJumpsInLevel((prev) => prev + 1);
     setTotalJumps((prev) => prev + 1);
 
+    // --- Generate Heckling Insult ---
+    const insultText = INSULTS[Math.floor(Math.random() * INSULTS.length)];
+    const newInsult: InsultBubble = {
+      id: Date.now(),
+      text: insultText,
+      x: 10 + Math.random() * 80, // Random 10-90% width
+      y: 20 + Math.random() * 40, // Random 20-60% height (around head area)
+      rot: (Math.random() * 20) - 10, // -10 to 10 deg
+    };
+    setInsults(prev => [...prev, newInsult]);
+    setTimeout(() => {
+        setInsults(prev => prev.filter(i => i.id !== newInsult.id));
+    }, 1000);
+
     // Landing Effect (Screen Shake)
     setTimeout(() => {
       setIsAnimating(false);
@@ -122,10 +169,9 @@ export default function App() {
           setCurrentLevelIndex(prev => prev + 1);
           setJumpsInLevel(0);
         } else {
-          alert(`恭喜退伍！你總共跳了 ${totalJumps + 1} 下。現在，從頭開始你的下一輪人生吧！(循環輪迴)`);
-          setCurrentLevelIndex(0);
-          setJumpsInLevel(0);
-          setTotalJumps(0);
+          // Final Level Completed -> Go to Confinement (True Ending)
+          setIsEnding(true);
+          setIsConfinement(true);
         }
       }, 650);
     }
@@ -184,32 +230,56 @@ export default function App() {
   );
 
   const renderConfinement = () => (
-    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black animate-in fade-in duration-1000 overflow-hidden">
+        {/* Gritty Texture Overlay */}
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-felt.png')] opacity-30 pointer-events-none"></div>
+        
+        {/* Bars Gradient */}
         <div 
-          className="absolute inset-0 pointer-events-none opacity-50"
+          className="absolute inset-0 pointer-events-none opacity-80 z-20"
           style={{
-            backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 40px, #111 40px, #111 50px)'
+            backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 15%, #000 15%, #050505 18%, #1a1a1a 19%, #000 21%)',
+            backgroundSize: '100% 100%'
           }}
         />
+
+        {/* Flickering Light Effect */}
+        <div className="absolute inset-0 bg-yellow-900/10 animate-flicker pointer-events-none z-10"></div>
         
-        <div className="z-10 bg-stone-800 p-8 rounded-xl border-2 border-red-900 shadow-2xl max-w-sm w-full text-center space-y-6 transform scale-110">
-            <div className="w-20 h-20 bg-red-950 rounded-full flex items-center justify-center mx-auto ring-4 ring-red-900/50">
-               <Lock className="w-10 h-10 text-red-500" />
+        <div className="z-30 flex flex-col items-center max-w-sm w-full p-6 space-y-8">
+            <div className={`w-24 h-24 rounded-full flex items-center justify-center ring-4 ring-offset-4 ring-offset-black ${isEnding ? 'bg-stone-800 ring-stone-700' : 'bg-red-950 ring-red-900'} shadow-2xl`}>
+               {isEnding ? <Skull className="w-12 h-12 text-stone-500" /> : <Lock className="w-12 h-12 text-red-500" />}
             </div>
             
-            <div>
-              <h2 className="text-4xl font-black text-red-500 tracking-widest mb-2">禁閉室</h2>
-              <p className="text-stone-400 font-medium">
-                動作太慢！懷疑啊？<br/>
-                超過五秒沒動作，直接關禁閉！
-              </p>
+            <div className="text-center space-y-4">
+              <h2 className={`text-5xl font-black tracking-widest ${isEnding ? 'text-stone-400' : 'text-red-600'} drop-shadow-[0_4px_4px_rgba(0,0,0,1)]`}>
+                  {isEnding ? '永無止盡' : '禁閉室'}
+              </h2>
+              
+              <div className="bg-black/60 p-4 border border-stone-800 rounded">
+                  <p className="text-stone-400 font-mono text-lg">
+                    {isEnding 
+                        ? "以為跳完就結束了？\n太天真了。\n軍旅生涯是沒有盡頭的輪迴。" 
+                        : "動作太慢！懷疑啊？\n超過五秒沒動作，\n直接關進來反省！"}
+                  </p>
+              </div>
+
+              {isEnding && (
+                 <div className="text-stone-600 font-mono text-xs tracking-[0.5em] mt-4 opacity-50">
+                    DAY {Math.floor(Math.random() * 1000)} OF CONFINEMENT
+                 </div>
+              )}
             </div>
 
             <button 
               onClick={handleRepent}
-              className="w-full py-4 bg-stone-700 hover:bg-stone-600 border border-stone-500 text-stone-200 font-bold rounded shadow-lg active:scale-95 transition-all"
+              className={`w-full py-4 px-8 border-2 font-black text-xl tracking-widest uppercase transition-all transform active:scale-95 shadow-[0_0_20px_rgba(0,0,0,0.8)]
+                 ${isEnding 
+                    ? 'bg-stone-900 border-stone-700 text-stone-500 hover:text-stone-300 hover:border-stone-500' 
+                    : 'bg-red-900/20 border-red-800 text-red-500 hover:bg-red-900/40 hover:text-red-400'
+                 }`}
             >
-              寫悔過書 (重置本關)
+              {isEnding ? "重新輪迴 (RESTART)" : "寫悔過書 (RETRY)"}
             </button>
         </div>
     </div>
@@ -244,6 +314,27 @@ export default function App() {
             transform: 'translate(-50%, -50%)'
           }}
         />
+      ))}
+
+      {/* Heckling Bubbles */}
+      {insults.map(insult => (
+         <div
+            key={insult.id}
+            className="absolute z-40 pointer-events-none animate-pop-in-out"
+            style={{
+                left: `${insult.x}%`,
+                top: `${insult.y}%`,
+                ['--rot' as any]: `${insult.rot}deg`
+            }}
+         >
+            <div className="relative bg-white border-2 border-black px-3 py-2 rounded-lg shadow-[4px_4px_0px_rgba(0,0,0,1)] max-w-[150px]">
+                <div className="text-black font-bold text-sm md:text-lg leading-tight text-center break-words">
+                    {insult.text}
+                </div>
+                {/* Bubble tail */}
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-r-2 border-b-2 border-black rotate-45"></div>
+            </div>
+         </div>
       ))}
 
       {isConfinement && renderConfinement()}

@@ -8,9 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       @keyframes jump-squat {
-        0% { transform: translateY(0); animation-timing-function: ease-out; }
-        50% { transform: translateY(-150px); animation-timing-function: ease-in; }
-        100% { transform: translateY(0); }
+        0% { transform: translateY(10px) scale(1, 0.95); animation-timing-function: ease-out; }
+        40% { transform: translateY(-160px) scale(0.95, 1.05); animation-timing-function: ease-in-out; }
+        100% { transform: translateY(10px) scale(1, 0.95); }
       }
       .animate-jump {
         animation: jump-squat 0.6s;
@@ -39,6 +39,32 @@
       }
       .animate-shake {
         animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both;
+      }
+
+      @keyframes pop-in-out {
+        0% { transform: scale(0) rotate(var(--rot)); opacity: 0; }
+        20% { transform: scale(1.1) rotate(var(--rot)); opacity: 1; }
+        80% { transform: scale(1) rotate(var(--rot)); opacity: 1; }
+        100% { transform: scale(1.2) rotate(var(--rot)); opacity: 0; }
+      }
+      .animate-pop-in-out {
+        animation: pop-in-out 1s forwards;
+      }
+      
+      @keyframes flicker {
+        0% { opacity: 0.1; }
+        2% { opacity: 0.1; }
+        4% { opacity: 0.5; }
+        19% { opacity: 0.5; }
+        21% { opacity: 0.1; }
+        23% { opacity: 0.1; }
+        46% { opacity: 0.5; }
+        80% { opacity: 0.1; }
+        83% { opacity: 0.4; }
+        87% { opacity: 0.1; }
+      }
+      .animate-flicker {
+        animation: flicker 4s infinite;
       }
     </style>
   <script type="importmap">

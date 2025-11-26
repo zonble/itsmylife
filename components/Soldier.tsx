@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface SoldierProps {
@@ -47,37 +48,36 @@ export const Soldier: React.FC<SoldierProps> = ({ isJumping, totalJumps = 0 }) =
               ) : isLeftLegForward ? (
                  /* DEEP LUNGE LEFT (Left leg forward, Right leg back) */
                  <g id="legs-lunge-left">
-                    {/* Right Leg (Back) - KNEE VERY LOW, almost touching ground */}
-                    {/* Thigh goes back and down. Shin goes back. */}
-                    <path d="M115 170 L 155 220 L 175 220" stroke="url(#camoPattern)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
+                    {/* Right Leg (Back) - Starts higher (y=160), Knee higher (y=215) */}
+                    <path d="M115 160 L 145 215 L 165 215" stroke="url(#camoPattern)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
                     {/* Boot - Toe on ground */}
-                    <path d="M165 220 L 185 220 L 185 235 L 170 235 Z" fill="#111" />
+                    <path d="M155 225 L 180 225 L 180 240 L 160 240 Z" fill="#111" />
 
-                    {/* Left Leg (Front) - Thigh Parallel to ground (Deep) */}
-                    <path d="M85 170 L 50 170 L 50 220" stroke="url(#camoPattern)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
+                    {/* Left Leg (Front) - Hip higher (y=160), Knee (y=170) */}
+                    <path d="M85 160 L 45 170 L 45 235" stroke="url(#camoPattern)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
                     {/* Boot - Flat on ground */}
-                    <path d="M35 220 L 65 220 L 65 235 L 35 235 Z" fill="#111" />
+                    <path d="M30 235 L 60 235 L 60 250 L 30 250 Z" fill="#111" />
                  </g>
               ) : (
                  /* DEEP LUNGE RIGHT (Right leg forward, Left leg back) */
                  <g id="legs-lunge-right">
                     {/* Left Leg (Back) */}
-                    <path d="M85 170 L 45 220 L 25 220" stroke="url(#camoPattern)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M85 160 L 55 215 L 35 215" stroke="url(#camoPattern)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
                     {/* Boot */}
-                    <path d="M15 220 L 35 220 L 35 235 L 20 235 Z" fill="#111" />
+                    <path d="M20 225 L 45 225 L 45 240 L 25 240 Z" fill="#111" />
 
                     {/* Right Leg (Front) */}
-                    <path d="M115 170 L 150 170 L 150 220" stroke="url(#camoPattern)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M115 160 L 155 170 L 155 235" stroke="url(#camoPattern)" strokeWidth="22" strokeLinecap="round" strokeLinejoin="round" />
                     {/* Boot */}
-                    <path d="M135 220 L 165 220 L 165 235 L 135 235 Z" fill="#111" />
+                    <path d="M140 235 L 170 235 L 170 250 L 140 250 Z" fill="#111" />
                  </g>
               )}
             </g>
 
 
             {/* --- TORSO --- */}
-            {/* If landed (not jumping), lower the torso significantly for the deep squat effect */}
-            <g transform={isJumping ? "translate(0,0)" : "translate(0, 30)"} className="transition-transform duration-100">
+            {/* Raised waist to translate(0, 15) for higher posture */}
+            <g transform={isJumping ? "translate(0,0)" : "translate(0, 15)"} className="transition-transform duration-100">
                 <path d="M70 70 L 130 70 L 125 150 L 75 150 Z" fill="url(#shirtGrad)" /> 
                 
                 {/* Sweat stains on armpits */}
