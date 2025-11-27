@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp media/bg.m4a dist/bg.m4a",
     "preview": "vite preview"
   },
   "dependencies": {

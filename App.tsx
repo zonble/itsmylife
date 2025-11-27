@@ -16,7 +16,7 @@ import {
 import { initAudio, playJumpSound, playPantSound } from "./utils/audio";
 
 // Reliable public domain military march (John Philip Sousa)
-const BGM_URL = "";
+const BGM_URL = "bg.m4a";
 
 const INSULTS = [
   "來點會的好不好？",
